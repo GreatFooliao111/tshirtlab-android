@@ -47,6 +47,8 @@ while
     APP_HOME="${app_path%"${app_path##*/}"}"
     [ -n "$APP_HOME" ] && APP_HOME=$(cd "$APP_HOME" 2>/dev/null && pwd) || break
     app_path="${1:+$APP_HOME}${1##*/}"
+do
+    :
 done
 
 APP_HOME=$(cd "${APP_HOME:-.}" 2>/dev/null && pwd) || exit 1
@@ -127,9 +129,8 @@ if "$cygwin" || "$msys" ; then
                     [ -e "$t" ] )) # edge case: might be empty
             then
                 arg=$( cygpath --path --unix "$arg" )
-            ;;
-        esac
-    done
+            fi
+        done
 fi
 
 
@@ -182,6 +183,8 @@ parse_args()
           *)    # operand
                 break ;;
         esac
+    do
+        :
     done
     echo "$args"
 }
@@ -194,4 +197,3 @@ exec "$JAVACMD" \
     -classpath "$CLASSPATH" \
     org.gradle.wrapper.GradleWrapperMain \
     "$@"
-
