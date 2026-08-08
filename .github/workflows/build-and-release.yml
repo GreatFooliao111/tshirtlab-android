@@ -20,18 +20,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK (tools + platform 33)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          mkdir -p "$HOME"/Android/Sdk/cmdline-tools
-          cd "$HOME"/Android/Sdk/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-123_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          rm cmdline-tools.zip
-          mkdir -p "$HOME"/.android
-          yes | "$HOME"/Android/Sdk/cmdline-tools/bin/sdkmanager --sdk_root="$HOME/Android/Sdk" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
+         - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 33
+          build-tools-version: 33.0.2
+          
       - name: Grant execute to gradlew
         run: chmod +x ./gradlew
 
