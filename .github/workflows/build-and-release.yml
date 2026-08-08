@@ -1,0 +1,52 @@
+name: Build and publish APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build APK and create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK (tools + platform 33)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          mkdir -p "$HOME"/Android/Sdk/cmdline-tools
+          cd "$HOME"/Android/Sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-123_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          rm cmdline-tools.zip
+          mkdir -p "$HOME"/.android
+          yes | "$HOME"/Android/Sdk/cmdline-tools/bin/sdkmanager --sdk_root="$HOME/Android/Sdk" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Grant execute to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build debug APK (installable)
+        run: ./gradlew clean assembleDebug --no-daemon --stacktrace
+
+      - name: List APKs
+        run: ls -R app/build/outputs/apk || true
+
+      - name: Create Release and upload APK
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v1.0.0
+          name: First release (APK)
+          body: |
+            Automated build: debug APK attached.
+            If you want a production-signed release APK, add signing configuration and re-run assembleRelease.
+          files: app/build/outputs/apk/debug/app-debug.apk
