@@ -1,0 +1,6 @@
+{
+  "name": "تیشرتلب (TShirtLab)",
+  "description": "آزمایشگاه سبک و تکنیک طراحی تیشرت و پرامپت‌ساز هوشمند چاپ DTF برای نوجوانان",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
