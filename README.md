@@ -1,4 +1,4 @@
-# 🧪 تیشرت‌لب (TShirtLab)
+# 🧪 تیشرتلب (TShirtLab)
 > **آزمایشگاه سبک و تکنیک طراحی تیشرت و پرامپت‌ساز هوشمند چاپ DTF**
 
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)

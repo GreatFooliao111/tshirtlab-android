@@ -1,6 +1,10 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
-import org.gradle.api.tasks.Exec
-import java.io.File
+import javax.inject.Inject
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 
 plugins {
   alias(libs.plugins.android.application)
@@ -9,36 +13,6 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
-}
-
-// `debug.keystore` is intentionally listed in .gitignore (it's a local dev
-// artifact, not something that belongs in git history), so it is NOT present
-// after a fresh clone. The signing configs below require it to exist, which
-// previously made `assembleDebug` / `assembleRelease` fail immediately with
-// "Keystore file '.../debug.keystore' not found for signing config
-// 'debugConfig'" on any fresh checkout (including this repo's own CI).
-// This task generates a standard Android debug keystore on demand, using the
-// same well-known credentials AGP's built-in debug signing uses, so builds
-// work out of the box both locally and in CI.
-val generateDebugKeystore = tasks.register<Exec>("generateDebugKeystore") {
-  val keystoreFile = rootProject.file("debug.keystore")
-  outputs.file(keystoreFile)
-  onlyIf { !keystoreFile.exists() }
-  doFirst { keystoreFile.parentFile.mkdirs() }
-  val keytoolPath = File(System.getProperty("java.home"), "bin/keytool").absolutePath
-  commandLine(
-    keytoolPath,
-    "-genkeypair",
-    "-v",
-    "-keystore", keystoreFile.absolutePath,
-    "-storepass", "android",
-    "-alias", "androiddebugkey",
-    "-keypass", "android",
-    "-keyalg", "RSA",
-    "-keysize", "2048",
-    "-validity", "10000",
-    "-dname", "CN=Android Debug,O=Android,C=US",
-  )
 }
 
 android {
@@ -113,20 +87,43 @@ secrets {
 
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
 
-// Wire the keystore generation task in front of every task that packages,
-// signs, or validates signing for an APK/AAB, so the keystore is guaranteed
-// to exist by the time it's needed — regardless of which Gradle task the
-// build was invoked with (assembleDebug, assembleRelease, bundleRelease,
-// CI's `assembleDebug assembleRelease`, etc.).
+// Automatically generate rootDir/debug.keystore if missing on a fresh clone/CI
+abstract class GenerateDebugKeystoreTask @Inject constructor(
+  private val execOperations: ExecOperations
+) : DefaultTask() {
+
+  @get:OutputFile
+  abstract val keystoreFile: RegularFileProperty
+
+  @TaskAction
+  fun generate() {
+    val file = keystoreFile.get().asFile
+    if (!file.exists()) {
+      execOperations.exec {
+        commandLine(
+          "keytool", "-genkeypair",
+          "-alias", "androiddebugkey",
+          "-keypass", "android",
+          "-keystore", file.absolutePath,
+          "-storepass", "android",
+          "-dname", "CN=Android Debug,O=Android,C=US",
+          "-keyalg", "RSA",
+          "-keysize", "2048",
+          "-validity", "10000"
+        )
+      }
+    }
+  }
+}
+
+val generateDebugKeystore = tasks.register<GenerateDebugKeystoreTask>("generateDebugKeystore") {
+  keystoreFile.set(layout.projectDirectory.file("../debug.keystore"))
+}
+
 tasks.configureEach {
-  if (
-    name.startsWith("assemble") ||
-    name.startsWith("bundle") ||
-    name.startsWith("package") ||
-    name.contains("Sign") ||
-    name.contains("ValidateSigning")
-  ) {
-    dependsOn(generateDebugKeystore)
+  if (name.startsWith("assemble") || name.startsWith("bundle") ||
+      name.startsWith("package") || name.contains("Sign") || name.contains("ValidateSigning")) {
+    dependsOn("generateDebugKeystore")
   }
 }
 
