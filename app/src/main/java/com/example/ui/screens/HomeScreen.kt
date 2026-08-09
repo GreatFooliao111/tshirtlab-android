@@ -68,7 +68,8 @@ import com.example.ui.theme.TextSecondary
 fun HomeScreen(
     onNavigateToStudio: () -> Unit,
     onNavigateToLibrary: () -> Unit,
-    onSelectItemDetail: (DesignItem) -> Unit
+    onSelectItemDetail: (DesignItem) -> Unit,
+    onOpenOnboarding: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -233,7 +234,9 @@ fun HomeScreen(
 
         // Educational Card: Difference between Style and Technique
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onOpenOnboarding() },
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
                 containerColor = DarkSurfaceHeader
@@ -246,24 +249,45 @@ fun HomeScreen(
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Lightbulb,
-                        contentDescription = null,
-                        tint = NeonYellow,
-                        modifier = Modifier.size(26.dp)
-                    )
-                    Text(
-                        text = "فرق سبک و تکنیک چیست؟",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = NeonYellow,
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Text(
+                            text = "فرق سبک و تکنیک چیست؟",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(NeonYellow.copy(alpha = 0.15f))
+                            .border(1.dp, NeonYellow.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "آموزش کامل",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NeonYellow
+                        )
+                    }
                 }
 
                 Text(
@@ -272,6 +296,29 @@ fun HomeScreen(
                     color = TextSecondary,
                     lineHeight = 22.sp
                 )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DarkSurfaceVariant)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "برای دیدن راهنمای تعاملی و تصویرسازی لمس کنید",
+                        fontSize = 11.sp,
+                        color = NeonCyan,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = NeonCyan,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
 

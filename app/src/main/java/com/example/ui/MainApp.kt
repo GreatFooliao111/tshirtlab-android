@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
@@ -36,7 +38,9 @@ import com.example.data.ItemType
 import com.example.ui.screens.DetailScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LibraryScreen
+import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.StudioScreen
+import com.example.ui.screens.isOnboardingFinished
 import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.DarkSurface
 import com.example.ui.theme.NeonCyan
@@ -56,8 +60,21 @@ fun MainApp() {
     TShirtLabTheme {
         // Enforce Right-To-Left layout for full Persian support
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            var currentTab by remember { mutableStateOf(NavTab.HOME) }
-            var activeDetailItem by remember { mutableStateOf<DesignItem?>(null) }
+            val context = LocalContext.current
+
+            LaunchedEffect(Unit) {
+                com.example.data.local.DesignRepository.getInstance(context).ensureSeeded()
+            }
+
+            var showOnboarding by remember { mutableStateOf(!isOnboardingFinished(context)) }
+
+            if (showOnboarding) {
+                OnboardingScreen(
+                    onFinishOnboarding = { showOnboarding = false }
+                )
+            } else {
+                var currentTab by remember { mutableStateOf(NavTab.HOME) }
+                var activeDetailItem by remember { mutableStateOf<DesignItem?>(null) }
 
             // Global Studio Selection State
             val selectedStyles = remember { mutableStateListOf<DesignItem>() }
@@ -218,7 +235,8 @@ fun MainApp() {
                                 NavTab.HOME -> HomeScreen(
                                     onNavigateToStudio = { currentTab = NavTab.STUDIO },
                                     onNavigateToLibrary = { currentTab = NavTab.LIBRARY },
-                                    onSelectItemDetail = { item -> activeDetailItem = item }
+                                    onSelectItemDetail = { item -> activeDetailItem = item },
+                                    onOpenOnboarding = { showOnboarding = true }
                                 )
                                 NavTab.LIBRARY -> LibraryScreen(
                                     onSelectItemDetail = { item -> activeDetailItem = item },
@@ -245,4 +263,5 @@ fun MainApp() {
             }
         }
     }
+}
 }
